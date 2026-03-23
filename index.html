@@ -12,7 +12,6 @@
         .card { background: var(--card); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; border: 1px solid #d1d5db; position: relative; }
         h1 { text-align: center; font-size: 1.3rem; margin: 0 0 10px 0; color: var(--primary); letter-spacing: 0.3em; border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
         
-        /* 報告種別選択の強調スタイル */
         .type-selector { background: #eef2f7; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid var(--accent); }
         .type-selector label { color: var(--accent); font-size: 0.8rem; }
         .type-selector select { border: 2px solid var(--accent); font-weight: bold; color: var(--primary); }
@@ -24,6 +23,9 @@
         label { font-weight: bold; margin-bottom: 2px; font-size: 0.75rem; color: var(--primary); }
         
         input, select, textarea { width: 100%; padding: 6px; border: 1px solid #a0aec0; border-radius: 4px; box-sizing: border-box; font-size: 14px; background: #fff; }
+
+        /* 「その他詳細」欄のスタイル */
+        #other_detail_area { display: none; background: #fff9db; padding: 8px; border-radius: 4px; border: 1px solid #f1c40f; margin-top: 5px; animation: fadeIn 0.3s; }
 
         .photo-area { margin-bottom: 15px; padding: 10px; background: #fff; border-radius: 8px; border: 1px solid #eee; }
         #photo-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
@@ -50,7 +52,6 @@
         .btn-load { background: #718096; }
         .btn-print { background: #2f855a; flex: 2; }
 
-        /* フッターのコピーライト表示 */
         .footer-copyright { text-align: center; color: #94a3b8; font-size: 11px; padding: 20px 0 10px; letter-spacing: 0.1em; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -63,6 +64,7 @@
             .input-grid { border: 1px solid #000; grid-template-columns: repeat(3, 1fr); gap: 0; }
             .field { border: 0.5px solid #000; padding: 4px; }
             input, select { border: none !important; font-size: 12px; }
+            #other_detail_area { display: block !important; background: none !important; border: 0.5px solid #000 !important; }
             .section-title { display: block !important; -webkit-print-color-adjust: exact; }
             .content-box textarea { height: auto !important; overflow: visible !important; display: block; font-size: 12px; white-space: pre-wrap; }
             #photo-preview { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; border: 1px solid #ddd; padding: 10px; }
@@ -107,6 +109,10 @@
                     <option value="破損">器物破損</option>
                     <option value="その他">その他</option>
                 </select>
+                <div id="other_detail_area">
+                    <label>その他詳細内容</label>
+                    <input type="text" id="other_detail" placeholder="具体的な区分を入力">
+                </div>
             </div>
             <div class="field"><label>報告者</label><input type="text" id="reporter"></div>
             <div class="field"><label>第一発見者</label><input type="text" id="discoverer"></div>
@@ -172,10 +178,11 @@ const dataSet = {
     "薬": { user: ["服用拒否","嚥下困難","混乱","体調不良"], staff: ["確認不足","思い込み","焦り","指示誤認"], mac: ["薬袋類似","カート乱れ","カレンダー不備"], met: ["ダブルチェック未実施","本人確認不備"], mng: ["ルールの形骸化","教育不足"], sit: "【状況】配薬時に、薬の残り（または誤配薬）を確認した。", res: "【対応】主治医報告。副作用観察。家族へ説明。" },
     "転倒": { user: ["ふらつき","認知症","尿意","筋力低下","不穏"], staff: ["見守り不足","介助ミス","連携不足"], mac: ["床濡れ","照明不足","靴不適合","マットなし"], met: ["介助手順不備","アセスメント不足"], mng: ["人員不足","指導不足"], sit: "【状況】〇〇にて転倒（転落）しているところを発見した。", res: "【対応】バイタル測定。外傷確認。嘱託医報告。" },
     "嚥下": { user: ["嚥下低下","早食い","義歯不適合"], staff: ["介助速度過多","見守り不足"], mac: ["食形態不備","椅子高さ不備"], met: ["姿勢保持不備","一口量過多"], mng: ["評価不足","情報共有漏れ"], sit: "【状況】食事中、激しいむせ込みがあり顔色不良となった。", res: "【対応】背部叩打。吸引。バイタル・SPO2確認。" },
-    "徘徊": { user: ["見当識障害","帰宅願望","不安感"], staff: ["見守り不備","巡回不足"], mac: ["センサー故障","施錠忘れ"], met: ["リスク管理不足"], mng: ["マニュアル未徹底"], sit: "【状況】居室不在を確認。捜索の結果〇〇で発見した。", res: "【対応】バイタル・外傷確認。家族・警察連絡。" },
+    "徘徊": { user: ["見見当識障害","帰宅願望","不安感"], staff: ["見守り不備","巡回不足"], mac: ["センサー故障","施錠忘れ"], met: ["リスク管理不足"], mng: ["マニュアル未徹底"], sit: "【状況】居室不在を確認。捜索の結果〇〇で発見した。", res: "【対応】バイタル・外傷確認。家族・警察連絡。" },
     "異食": { user: ["認知症","空腹感","寂しさ"], mac: ["危険物露出","ゴミ箱配置"], met: ["環境整備不足","見守り不足"], mng: ["リスク共有不足"], sit: "【状況】〇〇を口に含んでいるのを発見した。", res: "【対応】口腔内確認。主治医報告。症状観察。" },
     "皮膚": { user: ["皮膚脆弱","栄養低下","浮腫"], mac: ["柵接触","車椅子フットレス"], met: ["体位変換不足","移乗時接触"], mng: ["アセスメント漏れ"], sit: "【状況】〇〇部に皮膚剥離（褥瘡）を確認した。", res: "【対応】洗浄・保護。看護師報告。家族説明。" },
-    "破損": { user: ["精神的不穏","不注意"], mac: ["備品老朽化","配置不備"], met: ["声かけ失敗"], mng: ["環境整備不足"], sit: "【状況】〇〇を破損させたのを発見した。", res: "【対応】ケガの確認。破片清掃。家族報告。" }
+    "破損": { user: ["精神的不穏","不注意"], mac: ["備品老朽化","配置不備"], met: ["声かけ失敗"], mng: ["環境整備不足"], sit: "【状況】〇〇を破損させたのを発見した。", res: "【対応】ケガの確認。破片清掃。家族報告。" },
+    "その他": { user: [], staff: [], mac: [], met: [], mng: [], sit: "【状況】", res: "【対応】" }
 };
 
 function autoResize(textarea) {
@@ -186,11 +193,7 @@ function autoResize(textarea) {
 function updateType() {
     const type = document.getElementById('report_type').value;
     const titleEl = document.getElementById('main_title');
-    if (type === "事故") {
-        titleEl.innerText = "事 故 報 告 書";
-    } else {
-        titleEl.innerText = "ヒヤリハット報告書";
-    }
+    titleEl.innerText = type === "事故" ? "事 故 報 告 書" : "ヒヤリハット報告書";
 }
 
 function toggleYotei() {
@@ -200,6 +203,11 @@ function toggleYotei() {
 
 function updateUI() {
     const cat = document.getElementById('category').value;
+    
+    // 「その他」の時だけ入力欄を表示
+    const otherArea = document.getElementById('other_detail_area');
+    otherArea.style.display = (cat === "その他") ? "block" : "none";
+
     const item = dataSet[cat] || dataSet["転倒"];
     document.getElementById('situation').value = item.sit;
     document.getElementById('response').value = item.res;
@@ -257,11 +265,9 @@ function handlePhotos(event) {
 }
 
 function clearPhotos() {
-    const previewContainer = document.getElementById('photo-preview');
-    const clearBtn = document.getElementById('clear-photos');
-    previewContainer.innerHTML = '';
+    document.getElementById('photo-preview').innerHTML = '';
     currentPhotoDatas = [];
-    clearBtn.style.display = 'none';
+    document.getElementById('clear-photos').style.display = 'none';
 }
 
 function saveData() {
@@ -274,7 +280,7 @@ function saveData() {
 
 function loadData() {
     const saved = localStorage.getItem('incident_report_FINAL');
-    if (!saved) return alert('なし');
+    if (!saved) return alert('保存データがありません。');
     const storage = JSON.parse(saved);
     Object.keys(storage).forEach(id => { 
         if (id === 'attached_photos') return;
@@ -285,16 +291,15 @@ function loadData() {
     if (storage['attached_photos'] && storage['attached_photos'].length > 0) {
         currentPhotoDatas = storage['attached_photos'];
         const previewContainer = document.getElementById('photo-preview');
-        const clearBtn = document.getElementById('clear-photos');
-        clearBtn.style.display = 'inline-block';
+        document.getElementById('clear-photos').style.display = 'inline-block';
         currentPhotoDatas.forEach(dataUrl => {
             const img = document.createElement('img');
-            img.src = dataUrl;
-            img.className = 'preview-img';
+            img.src = dataUrl; img.className = 'preview-img';
             previewContainer.appendChild(img);
         });
     }
-    updateType(); // タイトルの復元
+    updateType(); 
+    updateUI(); // その他詳細の表示状態もここで復元
     toggleYotei();
     document.querySelectorAll('textarea').forEach(autoResize);
     alert('読込完了');
