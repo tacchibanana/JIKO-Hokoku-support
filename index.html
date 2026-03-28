@@ -1,10 +1,322 @@
-[info][title]📌 【事故】報告：未入力 様 (3/28 9:51)[/title]発生場所：
-------------------------------------------
-【状況】
-【状況】配薬時に、薬の残り（または誤配薬）を確認した。
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>報告アプリ_Tacchibanana</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f0f2f5; --card: #ffffff; --alert: #e74c3c; }
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; line-height: 1.3; }
+        .app-container { max-width: 850px; margin: auto; }
+        
+        .card { background: var(--card); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; border: 1px solid #d1d5db; position: relative; }
+        h1 { text-align: center; font-size: 1.3rem; margin: 0 0 10px 0; color: var(--primary); letter-spacing: 0.3em; border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
+        
+        .type-selector { background: #eef2f7; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid var(--accent); }
+        .type-selector label { color: var(--accent); font-size: 0.8rem; }
+        .type-selector select { border: 2px solid var(--accent); font-weight: bold; color: var(--primary); }
 
-【原因分析】
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px; }
+        .full-width { grid-column: 1 / -1; }
+        
+        .field { display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 2px; font-size: 0.75rem; color: var(--primary); }
+        
+        input, select, textarea { width: 100%; padding: 6px; border: 1px solid #a0aec0; border-radius: 4px; box-sizing: border-box; font-size: 14px; background: #fff; }
 
+        #other_detail_area { display: none; background: #fff9db; padding: 8px; border-radius: 4px; border: 1px solid #f1c40f; margin-top: 5px; animation: fadeIn 0.3s; }
 
-【再発防止策】
-[/info]
+        .photo-area { margin-bottom: 15px; padding: 10px; background: #fff; border-radius: 8px; border: 1px solid #eee; }
+        #photo-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
+        .preview-img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+        #clear-photos { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; display: none; margin-top: 5px; }
+
+        .check-area { margin: 10px 0; display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: var(--alert); font-weight: bold; line-height: 1.4; }
+        .check-area input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; }
+        #yotei-message { display: none; background: #fff3cd; border: 1px dashed #f39c12; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 11px; color: #856404; animation: fadeIn 0.3s; }
+
+        .analysis-section { background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 5px; overflow-x: auto; }
+        .analysis-grid { display: flex; gap: 5px; min-width: 600px; }
+        .m-box { flex: 1; min-width: 110px; }
+        .m-label { font-size: 0.65rem; font-weight: bold; color: var(--accent); margin-bottom: 3px; display: block; }
+        .m-sel { height: 100px !important; font-size: 11px; padding: 2px; }
+
+        .section-title { background: #f2f2f2; padding: 4px 8px; font-weight: bold; border: 1px solid #000; border-bottom: none; margin-top: 10px; font-size: 11px; }
+        .content-box { border: 1px solid #000; padding: 0; margin-bottom: 5px; }
+        .content-box textarea { border: none; min-height: 70px; padding: 8px; resize: none; overflow: hidden; line-height: 1.5; }
+
+        .action-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; margin-bottom: 20px; }
+        .btn { flex: 1; min-width: 120px; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.7; }
+        .btn-save { background: #4a5568; }
+        .btn-load { background: #718096; }
+        .btn-chat { background: #d63031; }
+        .btn-print { background: #2f855a; flex-basis: 100%; }
+
+        .footer-copyright { text-align: center; color: #94a3b8; font-size: 11px; padding: 20px 0 10px; letter-spacing: 0.1em; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media print {
+            .action-bar, .input-only, #yotei-message, .check-area, .type-selector, #photo-input-label, #clear-photos { display: none !important; }
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="card">
+        <div class="type-selector input-only">
+            <div class="field">
+                <label>作成する報告書の種別</label>
+                <select id="report_type" onchange="updateType()">
+                    <option value="事故">事故報告書</option>
+                    <option value="ヒヤリハット">ヒヤリハット報告書</option>
+                </select>
+            </div>
+        </div>
+
+        <h1 id="main_title">事 故 報 告 書</h1>
+
+        <div class="input-grid">
+            <div class="field"><label>利用者名</label><input type="text" id="user_name"></div>
+            <div class="field">
+                <label>要介護度</label>
+                <select id="care_level">
+                    <option>自立</option><option>要支援1-2</option><option>要介護1</option><option>要介護2</option><option>要介護3</option><option>要介護4</option><option>要介護5</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>事故区分</label>
+                <select id="category" onchange="updateUI()">
+                    <option value="薬">誤薬・誤配薬</option>
+                    <option value="転倒">転倒・転落</option>
+                    <option value="嚥下">誤嚥・むせ込み</option>
+                    <option value="徘徊">離設・徘徊</option>
+                    <option value="異食">異食</option>
+                    <option value="皮膚">皮膚損傷</option>
+                    <option value="破損">器物破損</option>
+                    <option value="その他">その他</option>
+                </select>
+                <div id="other_detail_area">
+                    <label>その他詳細内容</label>
+                    <input type="text" id="other_detail" placeholder="具体的な区分を入力">
+                </div>
+            </div>
+            <div class="field"><label>報告者</label><input type="text" id="reporter"></div>
+            <div class="field"><label>第一発見者</label><input type="text" id="discoverer"></div>
+        </div>
+
+        <div class="input-grid">
+            <div class="field"><label>発生日時</label><input type="datetime-local" id="event_date"></div>
+            <div class="field"><label>報告日時</label><input type="datetime-local" id="report_date"></div>
+            <div class="field"><label>発生場所</label><input type="text" id="location" placeholder="例：食堂"></div>
+            <div class="field full-width"><label>ケガの状態（部位・程度）</label><input type="text" id="injury"></div>
+        </div>
+
+        <div class="section-title">事故発生状況</div>
+        <div class="content-box"><textarea id="situation" oninput="autoResize(this)"></textarea></div>
+
+        <div class="section-title">現場写真</div>
+        <div class="photo-area content-box">
+            <label id="photo-input-label" for="photo-input" class="btn field" style="background:#3498db; display:inline-block; width:auto; padding:5px 10px; font-size:12px;">📷 写真を添付する</label>
+            <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
+            <button id="clear-photos" onclick="clearPhotos()">すべて削除</button>
+            <div id="photo-preview"></div>
+        </div>
+
+        <div class="section-title">事故後の対応</div>
+        <div class="content-box"><textarea id="response" oninput="autoResize(this)"></textarea></div>
+
+        <div class="section-title">原因分析（人・スタッフ・物・方法・管理）</div>
+        
+        <div class="input-only check-area">
+            <input type="checkbox" id="user_factor_check" onchange="toggleYotei()">
+            <label for="user_factor_check">利用者要因（身体・精神状態の変化）がありましたか？</label>
+        </div>
+        <div id="yotei-message">
+            💡 <b>利用者要因あり：</b> 普段と違う様子はありませんでしたか？「予兆キャッチャー」での評価を推奨します。
+        </div>
+
+        <div class="input-only analysis-section">
+            <div class="analysis-grid">
+                <div class="m-box"><span class="m-label">人 (利用者)</span><select multiple class="m-sel" id="m-user" onchange="sync()"></select></div>
+                <div class="m-box"><span class="m-label">人 (スタッフ)</span><select multiple class="m-sel" id="m-staff" onchange="sync()"></select></div>
+                <div class="m-box"><span class="m-label">物 (設備)</span><select multiple class="m-sel" id="m-mac" onchange="sync()"></select></div>
+                <div class="m-box"><span class="m-label">方法 (手順)</span><select multiple class="m-sel" id="m-met" onchange="sync()"></select></div>
+                <div class="m-box"><span class="m-label">管理 (体制)</span><select multiple class="m-sel" id="m-mng" onchange="sync()"></select></div>
+            </div>
+        </div>
+        <div class="content-box"><textarea id="analysis_text" oninput="autoResize(this)"></textarea></div>
+
+        <div class="section-title">再発予防策</div>
+        <div class="content-box"><textarea id="prevent" oninput="autoResize(this)"></textarea></div>
+
+        <div class="action-bar">
+            <button class="btn btn-save" onclick="saveData()">一時保存</button>
+            <button class="btn btn-load" onclick="loadData()">読込</button>
+            <button class="btn btn-chat" onclick="sendToChatwork()">Chatworkコピー&起動</button>
+            <button class="btn btn-print" onclick="preparePrint()">印刷 / PDF</button>
+        </div>
+
+        <div class="footer-copyright">© 2026 Tacchibanana</div>
+    </div>
+</div>
+
+<script>
+const dataSet = {
+    "薬": { user: ["服用拒否","嚥下困難","混乱","体調不良"], staff: ["確認不足","思い込み","焦り","指示誤認"], mac: ["薬袋類似","カート乱れ","カレンダー不備"], met: ["ダブルチェック未実施","本人確認不備"], mng: ["ルールの形骸化","教育不足"], sit: "【状況】配薬時に、薬の残り（または誤配薬）を確認した。", res: "【対応】主治医報告。副作用観察。家族へ説明。" },
+    "転倒": { user: ["ふらつき","認知症","尿意","筋力低下","不穏"], staff: ["見守り不足","介助ミス","連携不足"], mac: ["床濡れ","照明不足","靴不適合","マットなし"], met: ["介助手順不備","アセスメント不足"], mng: ["人員不足","指導不足"], sit: "【状況】〇〇にて転倒（転落）しているところを発見した。", res: "【対応】バイタル測定。外傷確認。嘱託医報告。" },
+    "嚥下": { user: ["嚥下低下","早食い","義歯不適合"], staff: ["介助速度過多","見守り不足"], mac: ["食形態不備","椅子高さ不備"], met: ["姿勢保持不備","一口量過多"], mng: ["評価不足","情報共有漏れ"], sit: "【状況】食事中、激しいむせ込みがあり顔色不良となった。", res: "【対応】背部叩打。吸引。バイタル・SPO2確認。" },
+    "徘徊": { user: ["見見当識障害","帰宅願望","不安感"], staff: ["見守り不備","巡回不足"], mac: ["センサー故障","施錠忘れ"], met: ["リスク管理不足"], mng: ["マニュアル未徹底"], sit: "【状況】居室不在を確認。捜索の結果〇〇で発見した。", res: "【対応】バイタル・外傷確認。家族・警察連絡。" },
+    "異食": { user: ["認知症","空腹感","寂しさ"], mac: ["危険物露出","ゴミ箱配置"], met: ["環境整備不足","見守り不足"], mng: ["リスク共有不足"], sit: "【状況】〇〇を口に含んでいるのを発見した。", res: "【対応】口腔内確認。主治医報告。症状観察。" },
+    "皮膚": { user: ["皮膚脆弱","栄養低下","浮腫"], mac: ["柵接触","車椅子フットレス"], met: ["体位変換不足","移乗時接触"], mng: ["アセスメント漏れ"], sit: "【状況】〇〇部に皮膚剥離（褥瘡）を確認した。", res: "【対応】洗浄・保護。看護師報告。家族説明。" },
+    "破損": { user: ["精神的不穏","不注意"], mac: ["備品老朽化","配置不備"], met: ["声かけ失敗"], mng: ["環境整備不足"], sit: "【状況】〇〇を破損させたのを発見した。", res: "【対応】ケガの確認。破片清掃。家族報告。" },
+    "その他": { user: [], staff: [], mac: [], met: [], mng: [], sit: "【状況】", res: "【対応】" }
+};
+
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+function updateType() {
+    const type = document.getElementById('report_type').value;
+    const titleEl = document.getElementById('main_title');
+    titleEl.innerText = type === "事故" ? "事 故 報 告 書" : "ヒヤリハット報告書";
+}
+
+function toggleYotei() {
+    const check = document.getElementById('user_factor_check');
+    document.getElementById('yotei-message').style.display = check.checked ? 'block' : 'none';
+}
+
+function updateUI() {
+    const cat = document.getElementById('category').value;
+    const otherArea = document.getElementById('other_detail_area');
+    otherArea.style.display = (cat === "その他") ? "block" : "none";
+    const item = dataSet[cat] || dataSet["転倒"];
+    document.getElementById('situation').value = item.sit;
+    document.getElementById('response').value = item.res;
+    updateSelect("m-user", item.user);
+    updateSelect("m-staff", item.staff);
+    updateSelect("m-mac", item.mac);
+    updateSelect("m-met", item.met);
+    updateSelect("m-mng", item.mng);
+    sync();
+    document.querySelectorAll('textarea').forEach(autoResize);
+}
+
+function updateSelect(id, list) {
+    const sel = document.getElementById(id); sel.innerHTML = "";
+    (list || []).forEach(v => { const opt = document.createElement("option"); opt.value = v; opt.text = v; sel.appendChild(opt); });
+}
+
+function sync() {
+    let res = ""; const labels = ["【利用者】", "【スタッフ】", "【物】", "【方法】", "【管理】"];
+    document.querySelectorAll(".m-sel").forEach((s, i) => {
+        const vals = Array.from(s.selectedOptions).map(o => o.value);
+        if (vals.length > 0) res += labels[i] + vals.join('、') + " ";
+    });
+    const tx = document.getElementById('analysis_text');
+    tx.value = res;
+    autoResize(tx);
+}
+
+function preparePrint() {
+    document.querySelectorAll('textarea').forEach(autoResize);
+    window.print();
+}
+
+let currentPhotoDatas = [];
+function handlePhotos(event) {
+    const files = event.target.files;
+    const previewContainer = document.getElementById('photo-preview');
+    if (files.length > 0) document.getElementById('clear-photos').style.display = 'inline-block';
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.match('image.*')) continue;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            const img = document.createElement('img');
+            img.src = dataUrl; img.className = 'preview-img';
+            previewContainer.appendChild(img);
+            currentPhotoDatas.push(dataUrl);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearPhotos() {
+    document.getElementById('photo-preview').innerHTML = '';
+    currentPhotoDatas = [];
+    document.getElementById('clear-photos').style.display = 'none';
+}
+
+function saveData() {
+    const storage = {};
+    document.querySelectorAll('input, select, textarea').forEach(el => { if(el.id) storage[el.id] = el.type==='checkbox'?el.checked:el.value; });
+    storage['attached_photos'] = currentPhotoDatas;
+    localStorage.setItem('incident_report_FINAL', JSON.stringify(storage));
+    alert('ブラウザに保存しました。');
+}
+
+function loadData() {
+    const saved = localStorage.getItem('incident_report_FINAL');
+    if (!saved) return alert('保存データがありません。');
+    const storage = JSON.parse(saved);
+    Object.keys(storage).forEach(id => { 
+        if (id === 'attached_photos') return;
+        const el = document.getElementById(id); 
+        if (el) { if (el.type==='checkbox') el.checked=storage[id]; else el.value=storage[id]; }
+    });
+    clearPhotos();
+    if (storage['attached_photos'] && storage['attached_photos'].length > 0) {
+        currentPhotoDatas = storage['attached_photos'];
+        document.getElementById('clear-photos').style.display = 'inline-block';
+        currentPhotoDatas.forEach(dataUrl => {
+            const img = document.createElement('img');
+            img.src = dataUrl; img.className = 'preview-img';
+            document.getElementById('photo-preview').appendChild(img);
+        });
+    }
+    updateType(); updateUI(); toggleYotei();
+    document.querySelectorAll('textarea').forEach(autoResize);
+    alert('読込完了');
+}
+
+// --- Chatwork連携（強制起動 & ブラウザ版バックアップ） ---
+function sendToChatwork() {
+    const userName = document.getElementById('user_name').value || "未入力";
+    const reportType = document.getElementById('report_type').value;
+    const now = new Date();
+    const dateTime = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+    let text = `[info][title]📌 【${reportType}】報告：${userName} 様 (${dateTime})[/title]`;
+    text += `発生場所：${document.getElementById('location').value}\n`;
+    text += `------------------------------------------\n`;
+    text += `【状況】\n${document.getElementById('situation').value}\n\n`;
+    text += `【原因分析】\n${document.getElementById('analysis_text').value}\n\n`;
+    text += `【再発防止策】\n${document.getElementById('prevent').value}[/info]`;
+
+    // クリップボードにコピー
+    navigator.clipboard.writeText(text).then(() => {
+        // アプリ起動（URLスキーム）を強制的に呼び出す
+        window.location.assign("chatwork://");
+        
+        // 1秒待っても画面が切り替わらなければブラウザ版を別タブで開く
+        setTimeout(() => {
+            if (confirm("アプリを起動できませんでした。ブラウザ版Chatworkを開きますか？\n（文章はコピー済みですので貼り付けるだけです）")) {
+                window.open("https://www.chatwork.com/", "_blank");
+            }
+        }, 1000);
+    }).catch(err => alert("コピーに失敗しました。"));
+}
+
+updateUI();
+</script>
+</body>
+</html>
