@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カンタン事故報告アプリ</title>
+    <title>報告アプリ_Tacchibanana</title>
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --bg: #f0f2f5; --card: #ffffff; --alert: #e74c3c; }
         body { font-family: "Helvetica Neue", Arial, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; line-height: 1.3; }
         .app-container { max-width: 850px; margin: auto; }
         .card { background: var(--card); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; border: 1px solid #d1d5db; position: relative; }
-        h1 { text-align: center; font-size: 1.3rem; margin: 0 0 10px 0; color: var(--primary); letter-spacing: 0.1em; border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
+        h1 { text-align: center; font-size: 1.3rem; margin: 0 0 10px 0; color: var(--primary); letter-spacing: 0.3em; border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
         .type-selector { background: #eef2f7; padding: 10px; border-radius: 6px; margin-bottom: 15px; border: 1px solid var(--accent); }
         .field { display: flex; flex-direction: column; }
         label { font-weight: bold; margin-bottom: 2px; font-size: 0.75rem; color: var(--primary); }
@@ -25,7 +25,7 @@
         .action-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; margin-bottom: 20px; align-items: center; justify-content: center; }
         .btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
         .btn-save { background: #4a5568; }
-        .btn-download { background: #2980b9; } /* 保存用ボタンの色 */
+        .btn-download { background: #2980b9; } /* フォルダ保存ボタン */
         .btn-load { background: #718096; }
         .btn-print { background: #2f855a; }
         .btn-chat-icon { background: none; border: none; padding: 0; cursor: pointer; width: 60px; height: 60px; flex: 0 0 60px; }
@@ -38,8 +38,6 @@
 
 <div class="app-container">
     <div class="card">
-        <h1>カンタン事故報告アプリ</h1>
-        
         <div class="type-selector input-only">
             <div class="field">
                 <label>作成する報告書の種別</label>
@@ -50,7 +48,7 @@
             </div>
         </div>
 
-        <h2 id="main_title" style="text-align:center; font-size:1.1rem; margin-top:0;">事 故 報 告 書</h2>
+        <h1 id="main_title">事 故 報 告 書</h1>
 
         <div class="input-grid">
             <div class="field"><label>利用者名</label><input type="text" id="user_name"></div>
@@ -114,7 +112,7 @@ function handlePhotos(event) {
     }
 }
 
-// --- データの収集用共通関数 ---
+// --- データの収集 ---
 function collectFormData() {
     const storage = {};
     document.querySelectorAll('input, select, textarea').forEach(el => { 
@@ -124,7 +122,7 @@ function collectFormData() {
     return storage;
 }
 
-// --- 1. 純粋にファイル保存のみを実行する関数 ---
+// --- 1. JSONファイルをフォルダに保存 ---
 function downloadJSONFile() {
     const data = collectFormData();
     const userName = data.user_name || "未入力";
@@ -144,10 +142,10 @@ function downloadJSONFile() {
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
     
-    alert("ファイルを保存しました。フォルダを選択して保存してください。\n(ブラウザの設定により自動でダウンロードフォルダに入る場合があります)");
+    alert("ファイルを保存しました。フォルダを選択して保存してください。");
 }
 
-// --- 2. Chatwork起動のみを実行する関数 ---
+// --- 2. Chatwork起動（クリップボードコピー付き） ---
 function openChatworkOnly() {
     const text = "📌 事故報告の共有データを保存しました。ファイルを添付して送信してください。";
     navigator.clipboard.writeText(text).then(() => {
@@ -158,6 +156,7 @@ function openChatworkOnly() {
     });
 }
 
+// --- 3. ファイル読み込み ---
 function importFile(event) {
     const file = event.target.files[0];
     if (!file) return;
