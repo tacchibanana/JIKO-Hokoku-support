@@ -15,22 +15,21 @@
         label { font-weight: bold; margin-bottom: 2px; font-size: 0.75rem; color: var(--primary); }
         input, select, textarea { width: 100%; padding: 6px; border: 1px solid #a0aec0; border-radius: 4px; box-sizing: border-box; font-size: 14px; background: #fff; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px; }
+        .full-width { grid-column: 1 / -1; }
         .section-title { background: #f2f2f2; padding: 4px 8px; font-weight: bold; border: 1px solid #000; border-bottom: none; margin-top: 10px; font-size: 11px; }
         .content-box { border: 1px solid #000; padding: 0; margin-bottom: 5px; }
         .content-box textarea { border: none; min-height: 70px; padding: 8px; resize: none; overflow: hidden; line-height: 1.5; }
+        .photo-area { margin-bottom: 15px; padding: 10px; background: #fff; border-radius: 8px; border: 1px solid #eee; }
         #photo-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 10px; }
         .preview-img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
-        
-        /* ボタンエリア */
         .action-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; margin-bottom: 20px; align-items: center; justify-content: center; }
-        .btn { flex: 1; min-width: 120px; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
-        .btn-save-local { background: #2980b9; } /* 新設：ファイル保存ボタン */
+        .btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
+        .btn-save { background: #4a5568; }
+        .btn-download { background: #2980b9; } /* 保存用ボタンの色 */
         .btn-load { background: #718096; }
-        .btn-print { background: #27ae60; }
-        
+        .btn-print { background: #2f855a; }
         .btn-chat-icon { background: none; border: none; padding: 0; cursor: pointer; width: 60px; height: 60px; flex: 0 0 60px; }
         .btn-chat-icon img { width: 100%; height: 100%; border-radius: 14px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
-
         .footer-copyright { text-align: center; color: #94a3b8; font-size: 11px; padding: 20px 0 10px; }
         @media print { .action-bar, .input-only, .type-selector { display: none !important; } }
     </style>
@@ -39,11 +38,11 @@
 
 <div class="app-container">
     <div class="card">
-        <h1 id="app_name">カンタン事故報告アプリ</h1>
-
+        <h1>カンタン事故報告アプリ</h1>
+        
         <div class="type-selector input-only">
             <div class="field">
-                <label>報告書の種別</label>
+                <label>作成する報告書の種別</label>
                 <select id="report_type" onchange="updateType()">
                     <option value="事故">事故報告書</option>
                     <option value="ヒヤリハット">ヒヤリハット報告書</option>
@@ -51,7 +50,7 @@
             </div>
         </div>
 
-        <h2 id="main_title" style="text-align:center; font-size:1.1rem; margin-bottom:10px;">事 故 報 告 書</h2>
+        <h2 id="main_title" style="text-align:center; font-size:1.1rem; margin-top:0;">事 故 報 告 書</h2>
 
         <div class="input-grid">
             <div class="field"><label>利用者名</label><input type="text" id="user_name"></div>
@@ -63,9 +62,9 @@
         <div class="content-box"><textarea id="situation" oninput="autoResize(this)"></textarea></div>
 
         <div class="section-title">現場写真</div>
-        <div class="content-box" style="padding:10px;">
+        <div class="photo-area content-box">
             <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
-            <label for="photo-input" class="btn" style="background:#3498db; display:inline-block; width:auto; padding:5px 10px; font-size:12px; cursor:pointer;">📷 写真を追加</label>
+            <label for="photo-input" class="btn" style="background:#3498db; display:inline-block; width:auto; padding:5px 10px; font-size:12px; cursor:pointer;">📷 写真添付</label>
             <div id="photo-preview"></div>
         </div>
 
@@ -73,16 +72,15 @@
         <div class="content-box"><textarea id="prevent" oninput="autoResize(this)"></textarea></div>
 
         <div class="action-bar">
-            <button class="btn btn-save-local" onclick="downloadJSON()">📁 共有ファイル(JSON)を保存</button>
-
-            <button class="btn-chat-icon" onclick="openChatwork()" title="Chatworkを起動">
+            <button class="btn btn-download" onclick="downloadJSONFile()">📁 ファイルを保存</button>
+            
+            <button class="btn-chat-icon" onclick="openChatworkOnly()" title="Chatworkを起動">
                 <img src="https://app.chatwork.com/icon/favicon.ico" alt="Chatwork" onerror="this.src='https://www.chatwork.com/favicon.ico'">
             </button>
 
             <input type="file" id="load-file" accept=".json" style="display:none" onchange="importFile(event)">
             <button class="btn btn-load" onclick="document.getElementById('load-file').click()">ファイル読込</button>
-            
-            <button class="btn btn-print" onclick="window.print()">印刷 / PDF</button>
+            <button class="btn btn-print" onclick="window.print()">印刷</button>
         </div>
 
         <div class="footer-copyright">© 2026 Tacchibanana</div>
@@ -116,46 +114,50 @@ function handlePhotos(event) {
     }
 }
 
-// --- JSONダウンロード機能（フォルダ選択を促す） ---
-function downloadJSON() {
-    const userName = document.getElementById('user_name').value || "未入力";
-    const reportType = document.getElementById('report_type').value;
-    const now = new Date();
-    const dateTime = `${now.getMonth()+1}月${now.getDate()}日_${now.getHours()}時${now.getMinutes()}分`;
-
+// --- データの収集用共通関数 ---
+function collectFormData() {
     const storage = {};
     document.querySelectorAll('input, select, textarea').forEach(el => { 
         if(el.id && el.type !== 'file') storage[el.id] = el.type==='checkbox'?el.checked:el.value; 
     });
     storage['attached_photos'] = currentPhotoDatas;
+    return storage;
+}
 
-    const jsonString = JSON.stringify(storage, null, 2);
+// --- 1. 純粋にファイル保存のみを実行する関数 ---
+function downloadJSONFile() {
+    const data = collectFormData();
+    const userName = data.user_name || "未入力";
+    const reportType = document.getElementById('report_type').value;
+    const now = new Date();
+    const dateTime = `${now.getMonth()+1}月${now.getDate()}日_${now.getHours()}時${now.getMinutes()}分`;
+    
+    const jsonString = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonString], {type: 'application/json'});
-    const fileName = `【共有用】${reportType}_${userName}_${dateTime}.json`;
+    const fileName = `【共有】${reportType}_${userName}_${dateTime}.json`;
 
-    // ダウンロード実行
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
     
-    alert("「" + fileName + "」を保存しました。\n保存先が分からない場合は「ダウンロード」フォルダを確認してください。");
+    alert("ファイルを保存しました。フォルダを選択して保存してください。\n(ブラウザの設定により自動でダウンロードフォルダに入る場合があります)");
 }
 
-// --- チャットワーク起動のみ ---
-function openChatwork() {
+// --- 2. Chatwork起動のみを実行する関数 ---
+function openChatworkOnly() {
     const text = "📌 事故報告の共有データを保存しました。ファイルを添付して送信してください。";
     navigator.clipboard.writeText(text).then(() => {
         window.location.assign("chatwork://");
         setTimeout(() => { 
-            if(confirm("アプリが立ち上がらない場合はブラウザ版を開きます。")) window.open("https://www.chatwork.com/", "_blank"); 
+            if(confirm("アプリが開きませんか？ブラウザ版を開きます。")) window.open("https://www.chatwork.com/", "_blank"); 
         }, 1500);
     });
 }
 
-// --- ファイル読み込み ---
 function importFile(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -181,12 +183,16 @@ function importFile(event) {
             }
             updateType();
             document.querySelectorAll('textarea').forEach(autoResize);
-            alert("読み込みが完了しました。");
+            alert("ファイルを読み込みました。");
         } catch (err) {
-            alert("読み込みに失敗しました。正しいJSONファイルを選択してください。");
+            alert("ファイルの形式が正しくありません。");
         }
     };
     reader.readAsText(file);
+}
+
+function saveData() {
+    alert("一時保存しました（ブラウザ内）");
 }
 </script>
 </body>
