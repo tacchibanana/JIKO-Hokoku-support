@@ -57,15 +57,8 @@
         
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* 印刷時の設定 */
         @media print { 
-            /* 印刷したくない要素を指定 */
-            .action-bar, 
-            .input-only, 
-            .type-selector, 
-            #photo-input-label, 
-            #clear-photos, 
-            .footer-copyright { 
+            .action-bar, .input-only, .type-selector, #photo-input-label, #clear-photos, .footer-copyright { 
                 display: none !important; 
             } 
         }
@@ -150,9 +143,9 @@
         <div class="content-box"><textarea id="prevent" oninput="autoResize(this)"></textarea></div>
 
         <div class="action-bar">
-            <button class="btn btn-download" onclick="downloadJSONFile()">📁 JSON保存</button>
+            <button class="btn btn-download" onclick="downloadJSONFile()" title="データをJSONで保存">📁 データ保存</button>
 
-            <button class="btn-chat-icon" onclick="exportToChatwork()" title="共有用ファイルをDLしてChatworkを起動">
+            <button class="btn-chat-icon" onclick="exportToChatworkPDF()" title="PDFを保存してChatworkへ共有">
                 <img src="https://app.chatwork.com/icon/favicon.ico" alt="Chatwork" onerror="this.src='https://www.chatwork.com/favicon.ico'">
             </button>
 
@@ -167,6 +160,7 @@
 </div>
 
 <script>
+// --- 既存のDataSet/初期化処理 ---
 const dataSet = {
     "薬": { user: ["服用拒否","嚥下困難","混乱","体調不良"], staff: ["確認不足","思い込み","焦り","指示誤認"], mac: ["薬袋類似","カート乱れ","カレンダー不備"], met: ["ダブルチェック未実施","本人確認不備"], mng: ["ルールの形骸化","教育不足"], sit: "【状況】配薬時に、薬の残りを確認した。", res: "【対応】主治医報告。副作用観察。" },
     "転倒": { user: ["ふらつき","認知症","尿意","筋力低下"], staff: ["見守り不足","介助ミス"], mac: ["床濡れ","照明不足","靴不適合"], met: ["介助手順不備"], mng: ["人員不足"], sit: "【状況】〇〇にて転倒しているところを発見した。", res: "【対応】バイタル測定。外傷確認。" },
@@ -241,6 +235,33 @@ function preparePrint() {
     window.print();
 }
 
+// --- Chatwork連携（PDF共有用） ---
+function exportToChatworkPDF() {
+    // 1. 印刷画面を起動
+    preparePrint();
+
+    // 印刷ダイアログを閉じたりキャンセルした後に実行される
+    setTimeout(() => {
+        const reportType = document.getElementById('report_type').value;
+        const userName = document.getElementById('user_name').value || "未入力";
+        const situation = document.getElementById('situation').value || "";
+
+        // 2. クリップボードにメッセージをコピー
+        const text = `📌 【${reportType}共有】\n利用者名：${userName} 様\n\nPDFを書き出しました。このメッセージと一緒にPDFファイルを添付して送信してください。\n\n【状況抜粋】\n${situation}`;
+        
+        navigator.clipboard.writeText(text).then(() => {
+            alert("チャットワーク用メッセージをコピーしました。PDFを保存後、チャットワークに貼り付けてファイルを添付してください。");
+            
+            // 3. チャットワークを起動
+            window.location.assign("chatwork://");
+            setTimeout(() => { 
+                if(confirm("アプリが開きませんか？Web版を開きます。")) window.open("https://www.chatwork.com/", "_blank"); 
+            }, 1000);
+        });
+    }, 500);
+}
+
+// --- その他の保存・読込機能 ---
 function collectData() {
     const storage = {};
     document.querySelectorAll('input, select, textarea').forEach(el => { 
@@ -255,28 +276,12 @@ function downloadJSONFile() {
     const userName = storage.user_name || "未入力";
     const reportType = document.getElementById('report_type').value;
     const now = new Date();
-    const fileName = `【共有】${reportType}_${userName}_${now.getTime()}.json`;
-    
+    const fileName = `報告データ_${reportType}_${userName}.json`;
     const blob = new Blob([JSON.stringify(storage, null, 2)], {type: 'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = fileName;
-    document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    alert("ダウンロード完了。");
-}
-
-function exportToChatwork() {
-    const storage = collectData();
-    const userName = storage.user_name || "未入力";
-    const reportType = document.getElementById('report_type').value;
-    downloadJSONFile();
-    const text = `📌 【${reportType}】共有データ：${userName} 様\n添付のJSONファイルを読み込んで確認してください。\n\n【状況】\n${storage.situation || ""}`;
-    navigator.clipboard.writeText(text).then(() => {
-        window.location.assign("chatwork://");
-        setTimeout(() => { if(confirm("アプリが開きませんか？Web版を開きます。")) window.open("https://www.chatwork.com/", "_blank"); }, 1500);
-    });
 }
 
 function importJSONFile(event) {
@@ -305,15 +310,14 @@ function importJSONFile(event) {
             }
             updateType();
             document.querySelectorAll('textarea').forEach(autoResize);
-            alert("読み込み完了");
-        } catch (err) { alert("不正なファイル形式です。"); }
+        } catch (err) { alert("形式が正しくありません。"); }
     };
     reader.readAsText(file);
 }
 
 function saveData() {
     localStorage.setItem('incident_temp', JSON.stringify(collectData()));
-    alert('ブラウザに一時保存しました。');
+    alert('一時保存しました。');
 }
 
 updateUI();
