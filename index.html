@@ -45,7 +45,7 @@
         .btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; transition: opacity 0.2s; }
         .btn:active { opacity: 0.7; }
         .btn-save { background: #4a5568; }
-        .btn-download { background: #2980b9; } /* 新設：JSON保存ボタン */
+        .btn-download { background: #2980b9; }
         .btn-load { background: #718096; }
         .btn-print { background: #2f855a; }
         
@@ -54,8 +54,21 @@
         .btn-chat-icon img { width: 100%; height: 100%; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
         .footer-copyright { text-align: center; color: #94a3b8; font-size: 11px; padding: 20px 0 10px; letter-spacing: 0.1em; }
+        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media print { .action-bar, .input-only, .type-selector, #photo-input-label, #clear-photos { display: none !important; } }
+
+        /* 印刷時の設定 */
+        @media print { 
+            /* 印刷したくない要素を指定 */
+            .action-bar, 
+            .input-only, 
+            .type-selector, 
+            #photo-input-label, 
+            #clear-photos, 
+            .footer-copyright { 
+                display: none !important; 
+            } 
+        }
     </style>
 </head>
 <body>
@@ -228,7 +241,6 @@ function preparePrint() {
     window.print();
 }
 
-// --- データの収集と保存機能 ---
 function collectData() {
     const storage = {};
     document.querySelectorAll('input, select, textarea').forEach(el => { 
@@ -252,18 +264,14 @@ function downloadJSONFile() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    alert("チャットワーク画面にペースト→➕ボタン→フォルダを選択→ファイルを添付。");
+    alert("ダウンロード完了。");
 }
 
 function exportToChatwork() {
     const storage = collectData();
     const userName = storage.user_name || "未入力";
     const reportType = document.getElementById('report_type').value;
-    
-    // ファイルダウンロード
     downloadJSONFile();
-
-    // クリップボードコピー
     const text = `📌 【${reportType}】共有データ：${userName} 様\n添付のJSONファイルを読み込んで確認してください。\n\n【状況】\n${storage.situation || ""}`;
     navigator.clipboard.writeText(text).then(() => {
         window.location.assign("chatwork://");
